@@ -548,12 +548,20 @@ class _ScrollablePositionedListState extends State<ScrollablePositionedList>
       // Scroll directly.
       final localScrollAmount = itemPosition.itemLeadingEdge *
           primary.scrollController.position.viewportDimension;
+      final calculatedOffset = primary.scrollController.offset +
+          localScrollAmount -
+          alignment * primary.scrollController.position.viewportDimension;
+      final clampedOffset = primary.scrollController.hasClients
+          ? calculatedOffset.clamp(
+              primary.scrollController.position.minScrollExtent,
+              primary.scrollController.position.maxScrollExtent,
+            )
+          : calculatedOffset;
       await primary.scrollController.animateTo(
-          primary.scrollController.offset +
-              localScrollAmount -
-              alignment * primary.scrollController.position.viewportDimension,
-          duration: duration,
-          curve: curve);
+        clampedOffset,
+        duration: duration,
+        curve: curve,
+      );
     } else {
       final scrollAmount = _screenScrollCount *
           primary.scrollController.position.viewportDimension;
@@ -562,23 +570,48 @@ class _ScrollablePositionedListState extends State<ScrollablePositionedList>
       startAnimationCallback = () {
         SchedulerBinding.instance.addPostFrameCallback((_) {
           startAnimationCallback = () {};
+
           _animationController?.dispose();
           _animationController =
               AnimationController(vsync: this, duration: duration)..forward();
+              
           opacity.parent = _opacityAnimation(opacityAnimationWeights)
               .animate(_animationController);
-          secondary.scrollController.jumpTo(-direction *
+
+          final calculatedSecondaryOffset = -direction *
               (_screenScrollCount *
                       primary.scrollController.position.viewportDimension -
                   alignment *
-                      secondary.scrollController.position.viewportDimension));
+                      secondary.scrollController.position.viewportDimension);
+          final clampedSecondaryOffset = secondary.scrollController.hasClients
+              ? calculatedSecondaryOffset.clamp(
+                  secondary.scrollController.position.minScrollExtent,
+                  secondary.scrollController.position.maxScrollExtent,
+                )
+              : calculatedSecondaryOffset;
+          secondary.scrollController.jumpTo(clampedSecondaryOffset);
 
-          startCompleter.complete(primary.scrollController.animateTo(
-              primary.scrollController.offset + direction * scrollAmount,
+          final calculatedPrimaryOffset =
+              primary.scrollController.offset + direction * scrollAmount;
+          final clampedPrimaryOffset = primary.scrollController.hasClients
+              ? calculatedPrimaryOffset.clamp(
+                  primary.scrollController.position.minScrollExtent,
+                  primary.scrollController.position.maxScrollExtent)
+              : calculatedPrimaryOffset;
+          startCompleter.complete(
+            primary.scrollController.animateTo(
+              clampedPrimaryOffset,
               duration: duration,
-              curve: curve));
-          endCompleter.complete(secondary.scrollController
-              .animateTo(0, duration: duration, curve: curve));
+              curve: curve,
+            ),
+          );
+          endCompleter.complete(
+            secondary.scrollController.animateTo(
+              0,
+              duration: duration,
+              curve: curve,
+            ),
+          );
         });
       };
       setState(() {
