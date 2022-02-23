@@ -568,7 +568,7 @@ class _ScrollablePositionedListState extends State<ScrollablePositionedList>
       final startCompleter = Completer<void>();
       final endCompleter = Completer<void>();
       startAnimationCallback = () {
-        SchedulerBinding.instance.addPostFrameCallback((_) {
+        SchedulerBinding.instance?.addPostFrameCallback((_) {
           startAnimationCallback = () {};
 
           _animationController?.dispose();
