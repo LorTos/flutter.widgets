@@ -438,7 +438,7 @@ class _ScrollablePositionedListState extends State<ScrollablePositionedList>
     }
     if (_isTransitioning) {
       _stopScroll(canceled: true);
-      SchedulerBinding.instance.addPostFrameCallback((_) {
+      SchedulerBinding.instance?.addPostFrameCallback((_) {
         _startScroll(
           index: index,
           alignment: alignment,
@@ -493,7 +493,7 @@ class _ScrollablePositionedListState extends State<ScrollablePositionedList>
       final startCompleter = Completer<void>();
       final endCompleter = Completer<void>();
       startAnimationCallback = () {
-        SchedulerBinding.instance.addPostFrameCallback((_) {
+        SchedulerBinding.instance?.addPostFrameCallback((_) {
           startAnimationCallback = () {};
 
           _animationController?.dispose();
